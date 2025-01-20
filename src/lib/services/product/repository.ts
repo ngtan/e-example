@@ -16,33 +16,35 @@ export class ProductRepository {
 
     private readonly httpClient: any,
     private readonly config: any,
-    private readonly errorMapper: any,
+    private readonly errorMapper: any, // TODO: can be cacheManager
   ) {}
 
   async findById(id: string): Promise<Product | null> {
     try {
-      const response = await this.httpClient.get<ApiResponse<Product>>(
-        `${this.config.apiUrls.products}/${id}`
-      );
+      // const response = await this.httpClient.get<ApiResponse<Product>>(
+      //   `${this.config.apiUrls.products}/${id}`
+      // );
+      // return response.data;
+
+      const response = await this.httpClient.get<ApiResponse<Product>>(`products/${id}`);
       return response.data;
     } catch (error) {
       // if (error instanceof HttpNotFoundError) {
       //   return null;
       // }
-      throw this.errorMapper.mapRepositoryError(error);
+      // throw this.errorMapper.mapRepositoryError(error);
+      console.log('ProductRepository', error);
     }
   }
 
-  // async findAll(): Promise<Product[]> {
-  //   try {
-  //     const response = await this.httpClient.get<ApiResponse<Product[]>>(
-  //       this.config.apiUrls.products
-  //     );
-  //     return response.data;
-  //   } catch (error) {
-  //     throw this.errorMapper.mapRepositoryError(error);
-  //   }
-  // }
+  async findAll(): Promise<Product[]> {
+    try {
+      const response = await this.httpClient.get<ApiResponse<Product[]>>('products');
+      return response.data;
+    } catch (error) {
+      throw this.errorMapper.mapRepositoryError(error);
+    }
+  }
 
   // async search(query: NormalizedProductQuery): Promise<SearchResult<Product>> {
   //   try {

@@ -1,9 +1,10 @@
 // src/lib/services/product/validators.ts
 
-import { ValidationRule } from "../business";
+import { Validator } from "../business";
 
 export interface ValidationError {
   field: string;
+  code: string;
   message: string;
 }
 
@@ -32,10 +33,13 @@ export interface ProductUpdateInput {
   metadata?: Record<string, any>;
 }
 
-export class ProductValidator implements ValidationRule {
+export class ProductValidator implements Validator {
   private errors: ValidationError[] = [];
 
-  constructor(private product: ProductCreateInput | ProductUpdateInput) {}
+  constructor(
+    private product: ProductCreateInput | ProductUpdateInput,
+    private config: ConfigManager
+  ) {}
 
   async validate(): Promise<ValidationResult> {
     this.validateName();
@@ -53,20 +57,32 @@ export class ProductValidator implements ValidationRule {
   }
 
   private validateName() {
+    const minLength = this.config.get('category.validation.name.minLength', 3);
+    const maxLength = this.config.get('category.validation.name.maxLength', 200);
+
     if (!this.product.name) {
       this.errors.push({
         field: 'name',
+        code: 'REQUIRED',
         message: 'Product name is required'
       });
-    } else if (this.product.name.length < 3) {
+    } else if (this.product.name.length < minLength) {
       this.errors.push({
         field: 'name',
-        message: 'Product name must be at least 3 characters long'
+        code: 'MIN_LENGTH',
+        message: `Product name must be at least ${minLength} characters long`,
       });
-    } else if (this.product.name.length > 200) {
+    } else if (this.product.name.length > maxLength) {
       this.errors.push({
         field: 'name',
-        message: 'Product name must not exceed 200 characters'
+        code: 'MAX_LENGTH',
+        message: `Product name must not exceed ${maxLength} characters`
+      });
+    } else if (!/^[\w\s-]+$/i.test(this.product.name)) {
+      this.errors.push({
+        field: 'name',
+        code: 'INVALID_FORMAT',
+        message: 'Product name contains invalid characters'
       });
     }
   }
@@ -75,16 +91,19 @@ export class ProductValidator implements ValidationRule {
     if (typeof this.product.price !== 'number') {
       this.errors.push({
         field: 'price',
+        code: 'NUMBER',
         message: 'Product price must be a number'
       });
     } else if (this.product.price < 0) {
       this.errors.push({
         field: 'price',
+        code: 'NUMBER_NEGATIVE',
         message: 'Product price cannot be negative'
       });
     } else if (this.product.price > 1000000) {
       this.errors.push({
         field: 'price',
+        code: 'NUMBER_TOO_LARGE',
         message: 'Product price exceeds maximum allowed value'
       });
     }

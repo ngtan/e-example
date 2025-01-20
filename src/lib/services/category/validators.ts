@@ -1,59 +1,83 @@
-typescript
-Copy
 // src/lib/services/category/errors.ts
-export class CategoryError extends ApplicationError {
-  constructor(message: string, cause?: Error) {
-    super(message, cause);
-    this.name = 'CategoryError';
-  }
+// export class CategoryError extends ApplicationError {
+//   constructor(message: string, cause?: Error) {
+//     super(message, cause);
+//     this.name = 'CategoryError';
+//   }
+// }
+
+// export class CategoryNotFoundError extends NotFoundError {
+//   constructor(identifier: string) {
+//     super(`Category not found: ${identifier}`);
+//     this.name = 'CategoryNotFoundError';
+//     this.metadata = { identifier };
+//   }
+// }
+
+// export class CategoryValidationError extends ValidationError {
+//   constructor(message: string, public validationErrors: ValidationError[] = []) {
+//     super(message);
+//     this.name = 'CategoryValidationError';
+//     this.metadata = { validationErrors };
+//   }
+// }
+
+// export class DuplicateCategoryError extends ConflictError {
+//   constructor(field: string, value: string) {
+//     super(`Category with ${field} "${value}" already exists`);
+//     this.name = 'DuplicateCategoryError';
+//     this.metadata = { field, value };
+//   }
+// }
+
+// export class CircularReferenceError extends CategoryError {
+//   constructor(categoryId: string, parentId: string) {
+//     super(`Cannot set parent to ${parentId} as it would create a circular reference`);
+//     this.name = 'CircularReferenceError';
+//     this.metadata = { categoryId, parentId };
+//   }
+// }
+
+// export class CategoryOperationError extends CategoryError {
+//   constructor(operation: string, reason: string, metadata?: Record<string, any>) {
+//     super(`Failed to ${operation} category: ${reason}`);
+//     this.name = 'CategoryOperationError';
+//     this.metadata = { operation, reason, ...metadata };
+//   }
+// }
+
+// export class CategoryHierarchyError extends CategoryError {
+//   constructor(message: string, metadata?: Record<string, any>) {
+//     super(message);
+//     this.name = 'CategoryHierarchyError';
+//     this.metadata = metadata;
+//   }
+// }
+
+import { Validator } from "../business";
+
+export interface ValidationError {
+  field: string;
+  code: string;
+  message: string;
 }
 
-export class CategoryNotFoundError extends NotFoundError {
-  constructor(identifier: string) {
-    super(`Category not found: ${identifier}`);
-    this.name = 'CategoryNotFoundError';
-    this.metadata = { identifier };
-  }
+export interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+}
+export interface CategoryCreateInput {
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
 }
 
-export class CategoryValidationError extends ValidationError {
-  constructor(message: string, public validationErrors: ValidationError[] = []) {
-    super(message);
-    this.name = 'CategoryValidationError';
-    this.metadata = { validationErrors };
-  }
-}
-
-export class DuplicateCategoryError extends ConflictError {
-  constructor(field: string, value: string) {
-    super(`Category with ${field} "${value}" already exists`);
-    this.name = 'DuplicateCategoryError';
-    this.metadata = { field, value };
-  }
-}
-
-export class CircularReferenceError extends CategoryError {
-  constructor(categoryId: string, parentId: string) {
-    super(`Cannot set parent to ${parentId} as it would create a circular reference`);
-    this.name = 'CircularReferenceError';
-    this.metadata = { categoryId, parentId };
-  }
-}
-
-export class CategoryOperationError extends CategoryError {
-  constructor(operation: string, reason: string, metadata?: Record<string, any>) {
-    super(`Failed to ${operation} category: ${reason}`);
-    this.name = 'CategoryOperationError';
-    this.metadata = { operation, reason, ...metadata };
-  }
-}
-
-export class CategoryHierarchyError extends CategoryError {
-  constructor(message: string, metadata?: Record<string, any>) {
-    super(message);
-    this.name = 'CategoryHierarchyError';
-    this.metadata = metadata;
-  }
+export interface CategoryUpdateInput {
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
 }
 
 // src/lib/services/category/validators.ts
@@ -65,7 +89,7 @@ export class CategoryValidator implements Validator {
     private config: ConfigManager
   ) {}
 
-  validate(): ValidationResult {
+  async validate(): Promise<ValidationResult> {
     this.validateName();
     this.validateSlug();
     this.validateDescription();
@@ -89,26 +113,19 @@ export class CategoryValidator implements Validator {
         code: 'REQUIRED',
         message: 'Category name is required'
       });
-      return;
-    }
-
-    if (this.input.name.length < minLength) {
+    } else if (this.input.name.length < minLength) {
       this.errors.push({
         field: 'name',
         code: 'MIN_LENGTH',
         message: `Category name must be at least ${minLength} characters long`
       });
-    }
-
-    if (this.input.name.length > maxLength) {
+    } else if (this.input.name.length > maxLength) {
       this.errors.push({
         field: 'name',
         code: 'MAX_LENGTH',
         message: `Category name must not exceed ${maxLength} characters`
       });
-    }
-
-    if (!/^[\w\s-]+$/i.test(this.input.name)) {
+    } else if (!/^[\w\s-]+$/i.test(this.input.name)) {
       this.errors.push({
         field: 'name',
         code: 'INVALID_FORMAT',
@@ -129,9 +146,7 @@ export class CategoryValidator implements Validator {
         code: 'MAX_LENGTH',
         message: `Slug must not exceed ${maxLength} characters`
       });
-    }
-
-    if (!slugRegex.test(this.input.slug)) {
+    } else if (!slugRegex.test(this.input.slug)) {
       this.errors.push({
         field: 'slug',
         code: 'INVALID_FORMAT',
@@ -224,137 +239,137 @@ export class CategoryValidator implements Validator {
   }
 }
 
-export class CategoryHierarchyValidator implements Validator {
-  constructor(
-    private categoryId: string,
-    private parentId: string,
-    private categoryRepository: CategoryRepository,
-    private config: ConfigManager
-  ) {}
+// export class CategoryHierarchyValidator implements Validator {
+//   constructor(
+//     private categoryId: string,
+//     private parentId: string,
+//     private categoryRepository: CategoryRepository,
+//     private config: ConfigManager
+//   ) {}
 
-  async validate(): Promise<ValidationResult> {
-    const errors: ValidationError[] = [];
+//   async validate(): Promise<ValidationResult> {
+//     const errors: ValidationError[] = [];
 
-    // Check maximum depth
-    const maxDepth = this.config.get('category.validation.maxDepth', 5);
-    const depth = await this.calculateDepth(this.parentId);
+//     // Check maximum depth
+//     const maxDepth = this.config.get('category.validation.maxDepth', 5);
+//     const depth = await this.calculateDepth(this.parentId);
     
-    if (depth >= maxDepth) {
-      errors.push({
-        field: 'parentId',
-        code: 'MAX_DEPTH',
-        message: `Category hierarchy cannot exceed ${maxDepth} levels`
-      });
-    }
+//     if (depth >= maxDepth) {
+//       errors.push({
+//         field: 'parentId',
+//         code: 'MAX_DEPTH',
+//         message: `Category hierarchy cannot exceed ${maxDepth} levels`
+//       });
+//     }
 
-    // Check circular reference
-    if (await this.hasCircularReference(this.categoryId, this.parentId)) {
-      errors.push({
-        field: 'parentId',
-        code: 'CIRCULAR_REFERENCE',
-        message: 'Cannot create circular reference in category hierarchy'
-      });
-    }
+//     // Check circular reference
+//     if (await this.hasCircularReference(this.categoryId, this.parentId)) {
+//       errors.push({
+//         field: 'parentId',
+//         code: 'CIRCULAR_REFERENCE',
+//         message: 'Cannot create circular reference in category hierarchy'
+//       });
+//     }
 
-    // Check children count
-    const maxChildren = this.config.get('category.validation.maxChildren', 100);
-    const childrenCount = await this.getChildrenCount(this.parentId);
+//     // Check children count
+//     const maxChildren = this.config.get('category.validation.maxChildren', 100);
+//     const childrenCount = await this.getChildrenCount(this.parentId);
     
-    if (childrenCount >= maxChildren) {
-      errors.push({
-        field: 'parentId',
-        code: 'MAX_CHILDREN',
-        message: `Parent category cannot have more than ${maxChildren} children`
-      });
-    }
+//     if (childrenCount >= maxChildren) {
+//       errors.push({
+//         field: 'parentId',
+//         code: 'MAX_CHILDREN',
+//         message: `Parent category cannot have more than ${maxChildren} children`
+//       });
+//     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
 
-  private async calculateDepth(categoryId: string): Promise<number> {
-    let depth = 0;
-    let currentId = categoryId;
+//   private async calculateDepth(categoryId: string): Promise<number> {
+//     let depth = 0;
+//     let currentId = categoryId;
 
-    while (currentId) {
-      depth++;
-      const category = await this.categoryRepository.findById(currentId);
-      if (!category || !category.parentId) break;
-      currentId = category.parentId;
-    }
+//     while (currentId) {
+//       depth++;
+//       const category = await this.categoryRepository.findById(currentId);
+//       if (!category || !category.parentId) break;
+//       currentId = category.parentId;
+//     }
 
-    return depth;
-  }
+//     return depth;
+//   }
 
-  private async hasCircularReference(categoryId: string, parentId: string): Promise<boolean> {
-    let currentId = parentId;
-    const visited = new Set<string>();
+//   private async hasCircularReference(categoryId: string, parentId: string): Promise<boolean> {
+//     let currentId = parentId;
+//     const visited = new Set<string>();
 
-    while (currentId) {
-      if (currentId === categoryId) return true;
-      if (visited.has(currentId)) return true;
+//     while (currentId) {
+//       if (currentId === categoryId) return true;
+//       if (visited.has(currentId)) return true;
       
-      visited.add(currentId);
-      const category = await this.categoryRepository.findById(currentId);
-      if (!category || !category.parentId) break;
+//       visited.add(currentId);
+//       const category = await this.categoryRepository.findById(currentId);
+//       if (!category || !category.parentId) break;
       
-      currentId = category.parentId;
-    }
+//       currentId = category.parentId;
+//     }
 
-    return false;
-  }
+//     return false;
+//   }
 
-  private async getChildrenCount(categoryId: string): Promise<number> {
-    const result = await this.categoryRepository.search({
-      parentId: categoryId,
-      limit: 0 // Only get count
-    });
-    return result.total;
-  }
-}
+//   private async getChildrenCount(categoryId: string): Promise<number> {
+//     const result = await this.categoryRepository.search({
+//       parentId: categoryId,
+//       limit: 0 // Only get count
+//     });
+//     return result.total;
+//   }
+// }
 
-// Additional specialized validators if needed
-export class CategorySlugValidator implements Validator {
-  constructor(
-    private slug: string,
-    private existingCategories: Category[],
-    private config: ConfigManager
-  ) {}
+// // Additional specialized validators if needed
+// export class CategorySlugValidator implements Validator {
+//   constructor(
+//     private slug: string,
+//     private existingCategories: Category[],
+//     private config: ConfigManager
+//   ) {}
 
-  validate(): ValidationResult {
-    const errors: ValidationError[] = [];
-    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-    const maxLength = this.config.get('category.validation.slug.maxLength', 100);
+//   validate(): ValidationResult {
+//     const errors: ValidationError[] = [];
+//     const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+//     const maxLength = this.config.get('category.validation.slug.maxLength', 100);
 
-    if (!slugRegex.test(this.slug)) {
-      errors.push({
-        field: 'slug',
-        code: 'INVALID_FORMAT',
-        message: 'Invalid slug format'
-      });
-    }
+//     if (!slugRegex.test(this.slug)) {
+//       errors.push({
+//         field: 'slug',
+//         code: 'INVALID_FORMAT',
+//         message: 'Invalid slug format'
+//       });
+//     }
 
-    if (this.slug.length > maxLength) {
-      errors.push({
-        field: 'slug',
-        code: 'MAX_LENGTH',
-        message: `Slug cannot exceed ${maxLength} characters`
-      });
-    }
+//     if (this.slug.length > maxLength) {
+//       errors.push({
+//         field: 'slug',
+//         code: 'MAX_LENGTH',
+//         message: `Slug cannot exceed ${maxLength} characters`
+//       });
+//     }
 
-    if (this.existingCategories.some(category => category.slug === this.slug)) {
-      errors.push({
-        field: 'slug',
-        code: 'DUPLICATE',
-        message: 'Slug already exists'
-      });
-    }
+//     if (this.existingCategories.some(category => category.slug === this.slug)) {
+//       errors.push({
+//         field: 'slug',
+//         code: 'DUPLICATE',
+//         message: 'Slug already exists'
+//       });
+//     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-}
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
+// }

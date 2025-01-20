@@ -3,7 +3,7 @@
 import type { MonitoringSystem } from '../monitoring';
 
 export interface CacheConfig {
-  storage: Storage | null;
+  storage: Storage | Map<string, any> | null;
   prefix: string;
   defaultTtl?: number;
   maxEntries?: number;

@@ -120,10 +120,9 @@ export class Container {
     this.singletons.clear();
     this.resolving.clear();
   }
-
-  // Utility methods
   async initializeAll(): Promise<void> {
     const promises = Array.from(this.services.entries())
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, def]) => !def.lazy)
       .map(async ([token]) => {
         await this.get(token);

@@ -36,7 +36,12 @@ export interface ProductQueryParams {
   filter?: Record<string, any>;
 }
 
-export interface ProductQuery {
+
+export interface BaseQuery {
+  defined_key: string; // TODO
+}
+
+export interface ProductQuery extends BaseQuery {
   category?: string;
   minPrice?: number;
   maxPrice?: number;

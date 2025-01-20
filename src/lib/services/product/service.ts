@@ -42,7 +42,7 @@ export class ProductService extends BaseBusinessService {
       
       if (!product) {
         // throw new NotFoundError(`Product ${id} not found`);
-        throw new Error(`Product ${id} not found`);
+        throw new Error(`Product "${id}" not found`);
       }
 
       // await this.eventBus.publish('product.viewed', { productId: id });

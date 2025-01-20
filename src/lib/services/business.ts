@@ -13,6 +13,10 @@ export interface ValidationRule {
   validate(): Promise<ValidationResult>;
 }
 
+export interface Validator {
+  validate(): Promise<ValidationResult>;
+}
+
 export interface BusinessOperation<T> {
   execute(): Promise<Result<T>>;
 }
@@ -55,6 +59,8 @@ export class BusinessOperationBuilder<T> {
           throw new ValidationError(validationResult.errors);
         }
       }
+
+      console.log({ cacheKey: this.cacheKey });
 
       const result = this.cacheKey
         ? await this.executeWithCache()
