@@ -15,6 +15,16 @@ export interface Product {
   variants?: ProductVariant[];
   specs?: Record<string, any>;
   stock: number;
+  status: 'active' | 'inactive';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
 }
 
 export interface ProductQueryParams {
@@ -26,17 +36,26 @@ export interface ProductQueryParams {
   filter?: Record<string, any>;
 }
 
-// src/lib/services/product/types.ts
-export interface ProductOperationOptions {
-  skipCache?: boolean;
-  invalidateCache?: boolean;
-  retryOptions?: {
-    maxAttempts: number;
-    delay: number;
-    shouldRetry?: (error: Error) => boolean;
-  };
-  validateOptions?: {
-    skipValidation?: boolean;
-    customValidators?: Validator[];
-  };
+export interface ProductQuery {
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  page?: number;
+  limit?: number;
 }
+
+// src/lib/services/product/types.ts
+// export interface ProductOperationOptions {
+//   skipCache?: boolean;
+//   invalidateCache?: boolean;
+//   retryOptions?: {
+//     maxAttempts: number;
+//     delay: number;
+//     shouldRetry?: (error: Error) => boolean;
+//   };
+//   validateOptions?: {
+//     skipValidation?: boolean;
+//     customValidators?: Validator[];
+//   };
+// }

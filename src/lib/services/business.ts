@@ -3,6 +3,16 @@ import { Result, PaginatedResult, QueryOptions } from '../../types';
 import { MonitoringSystem } from '../monitoring';
 import { CacheManager } from '../cache';
 
+export interface RetryOptions {
+  maxAttempts: number;
+  shouldRetry: (error: Error) => boolean;
+  getDelayMs: (attempt: number) => number;
+}
+
+export interface ValidationRule {
+  validate(): Promise<ValidationResult>;
+}
+
 export interface BusinessOperation<T> {
   execute(): Promise<Result<T>>;
 }
@@ -39,7 +49,6 @@ export class BusinessOperationBuilder<T> {
     const spanId = this.monitoring.tracer.startSpan('business.operation');
 
     try {
-      // Validate if rules exist
       if (this.validationRules) {
         const validationResult = await this.validate();
         if (!validationResult.success) {
@@ -47,12 +56,12 @@ export class BusinessOperationBuilder<T> {
         }
       }
 
-      // Execute with cache if configured
       const result = this.cacheKey
         ? await this.executeWithCache()
         : await this.executeWithRetry();
 
       return {
+        success: true,
         data: result,
         metadata: {
           spanId,
@@ -60,10 +69,14 @@ export class BusinessOperationBuilder<T> {
         }
       };
     } catch (error) {
-      this.monitoring.logger.log('error', 'Business operation failed', { error });
+      this.monitoring.logger.error('Business operation failed', { error });
       return {
-        data: null as any,
-        error: error as Error
+        success: false,
+        error: error as Error,
+        metadata: {
+          spanId,
+          timestamp: new Date()
+        }
       };
     } finally {
       this.monitoring.tracer.endSpan(spanId);
@@ -83,25 +96,28 @@ export class BusinessOperationBuilder<T> {
       return this.operation();
     }
 
+    let lastError: Error | undefined;
+
     for (let attempt = 1; attempt <= this.retryOptions.maxAttempts; attempt++) {
       try {
         return await this.operation();
       } catch (error) {
+        lastError = error as Error;
         if (
           attempt === this.retryOptions.maxAttempts ||
-          !this.retryOptions.shouldRetry(error)
+          !this.retryOptions.shouldRetry(lastError)
         ) {
-          throw error;
+          throw lastError;
         }
         await this.delay(this.retryOptions.getDelayMs(attempt));
       }
     }
 
-    throw new Error('Max retry attempts reached');
+    throw lastError || new Error('Operation failed');
   }
 
   private async validate(): Promise<ValidationResult> {
-    const errors: ValidationError[] = [];
+    const errors: string[] = [];
     
     for (const rule of this.validationRules!) {
       const result = await rule.validate();

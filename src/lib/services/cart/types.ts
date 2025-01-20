@@ -1,17 +1,18 @@
 // src/lib/services/cart/types.ts
-export interface CartItem extends BaseEntity {
+export interface CartItem {
   productId: string;
   quantity: number;
   price: number;
-  product: {
-    name: string;
-    slug: string;
-    image: string;
-  };
-  metadata?: Record<string, any>;
+  // product: {
+  //   name: string;
+  //   slug: string;
+  //   image: string;
+  // };
+  // metadata?: Record<string, any>;
 }
 
-export interface Cart extends BaseEntity {
+export interface Cart {
+  id: string;
   userId: string;
   items: CartItem[];
   subtotal: number;
@@ -21,6 +22,8 @@ export interface Cart extends BaseEntity {
   currency: string;
   metadata?: Record<string, any>;
   lastModified: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type CartStatus = 'active' | 'abandoned' | 'converted';

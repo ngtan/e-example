@@ -1,12 +1,17 @@
 // src/lib/services/cart/service.ts
+
+import { BaseBusinessService } from '../business';
+
 export class CartService extends BaseBusinessService {
   constructor(
     private readonly cartRepository: CartRepository,
     private readonly productService: ProductService,
     private readonly eventBus: EventBus,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly monitoring: MonitoringSystem,
+    private readonly cacheManager: CacheManager,
   ) {
-    super();
+    super(monitoring, cacheManager);
   }
 
   async getCart(
@@ -59,7 +64,8 @@ export class CartService extends BaseBusinessService {
 
       const cart = await this.cartRepository.addItem(userId, {
         productId,
-        quantity
+        quantity,
+        price: product.data.price // TODO
       });
 
       await this.eventBus.publish('cart.item.added', {
@@ -72,6 +78,7 @@ export class CartService extends BaseBusinessService {
 
       return cart;
     })
+    .withCache(`cart:${userId}`) // TODO: should???
     .withValidation([
       new CartItemValidator({ productId, quantity })
     ])

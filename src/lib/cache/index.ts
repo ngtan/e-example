@@ -84,7 +84,7 @@ export class Cache {
   private async maintenance(): Promise<void> {
     const spanId = this.config.monitoring?.tracer.startSpan('cache.maintenance');
     try {
-      const now = Date.now();
+      // const now = Date.now(); // TODO: Use this to optimize maintenance
       let removedCount = 0;
       
       for (const [key, entry] of this.cache.entries()) {

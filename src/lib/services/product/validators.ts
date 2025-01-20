@@ -1,10 +1,43 @@
 // src/lib/services/product/validators.ts
-export class ProductValidator implements Validator {
+
+import { ValidationRule } from "../business";
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+}
+
+export interface ProductCreateInput {
+  name: string;
+  price: number;
+  stock?: number;
+  categories: string[];
+  sku?: string;
+  slug?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ProductUpdateInput {
+  name?: string;
+  price?: number;
+  stock?: number;
+  categories?: string[];
+  sku?: string;
+  slug?: string;
+  metadata?: Record<string, any>;
+}
+
+export class ProductValidator implements ValidationRule {
   private errors: ValidationError[] = [];
 
   constructor(private product: ProductCreateInput | ProductUpdateInput) {}
 
-  validate(): ValidationResult {
+  async validate(): Promise<ValidationResult> {
     this.validateName();
     this.validatePrice();
     this.validateStock();
@@ -118,177 +151,177 @@ export class ProductValidator implements Validator {
   }
 }
 
-export class ProductPriceValidator implements Validator {
-  constructor(
-    private price: number,
-    private currency: string,
-    private config: ConfigManager
-  ) {}
+// export class ProductPriceValidator implements Validator {
+//   constructor(
+//     private price: number,
+//     private currency: string,
+//     private config: ConfigManager
+//   ) {}
 
-  validate(): ValidationResult {
-    const errors: ValidationError[] = [];
-    const currencyConfig = this.config.get(`pricing.${this.currency}`, {});
+//   validate(): ValidationResult {
+//     const errors: ValidationError[] = [];
+//     const currencyConfig = this.config.get(`pricing.${this.currency}`, {});
 
-    if (this.price < currencyConfig.minPrice || 0) {
-      errors.push({
-        field: 'price',
-        message: `Price cannot be less than ${currencyConfig.minPrice || 0} ${this.currency}`
-      });
-    }
+//     if (this.price < currencyConfig.minPrice || 0) {
+//       errors.push({
+//         field: 'price',
+//         message: `Price cannot be less than ${currencyConfig.minPrice || 0} ${this.currency}`
+//       });
+//     }
 
-    if (this.price > currencyConfig.maxPrice || 1000000) {
-      errors.push({
-        field: 'price',
-        message: `Price cannot exceed ${currencyConfig.maxPrice || 1000000} ${this.currency}`
-      });
-    }
+//     if (this.price > currencyConfig.maxPrice || 1000000) {
+//       errors.push({
+//         field: 'price',
+//         message: `Price cannot exceed ${currencyConfig.maxPrice || 1000000} ${this.currency}`
+//       });
+//     }
 
-    const decimalPlaces = (this.price.toString().split('.')[1] || '').length;
-    if (decimalPlaces > (currencyConfig.decimals || 2)) {
-      errors.push({
-        field: 'price',
-        message: `Price cannot have more than ${currencyConfig.decimals || 2} decimal places for ${this.currency}`
-      });
-    }
+//     const decimalPlaces = (this.price.toString().split('.')[1] || '').length;
+//     if (decimalPlaces > (currencyConfig.decimals || 2)) {
+//       errors.push({
+//         field: 'price',
+//         message: `Price cannot have more than ${currencyConfig.decimals || 2} decimal places for ${this.currency}`
+//       });
+//     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-}
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
+// }
 
-export class ProductStockValidator implements Validator {
-  constructor(
-    private stock: number,
-    private minStock: number = 0,
-    private maxStock: number = 999999
-  ) {}
+// export class ProductStockValidator implements Validator {
+//   constructor(
+//     private stock: number,
+//     private minStock: number = 0,
+//     private maxStock: number = 999999
+//   ) {}
 
-  validate(): ValidationResult {
-    const errors: ValidationError[] = [];
+//   validate(): ValidationResult {
+//     const errors: ValidationError[] = [];
 
-    if (!Number.isInteger(this.stock)) {
-      errors.push({
-        field: 'stock',
-        message: 'Stock quantity must be a whole number'
-      });
-    }
+//     if (!Number.isInteger(this.stock)) {
+//       errors.push({
+//         field: 'stock',
+//         message: 'Stock quantity must be a whole number'
+//       });
+//     }
 
-    if (this.stock < this.minStock) {
-      errors.push({
-        field: 'stock',
-        message: `Stock cannot be less than ${this.minStock}`
-      });
-    }
+//     if (this.stock < this.minStock) {
+//       errors.push({
+//         field: 'stock',
+//         message: `Stock cannot be less than ${this.minStock}`
+//       });
+//     }
 
-    if (this.stock > this.maxStock) {
-      errors.push({
-        field: 'stock',
-        message: `Stock cannot exceed ${this.maxStock}`
-      });
-    }
+//     if (this.stock > this.maxStock) {
+//       errors.push({
+//         field: 'stock',
+//         message: `Stock cannot exceed ${this.maxStock}`
+//       });
+//     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-}
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
+// }
 
-export class ProductImageValidator implements Validator {
-  constructor(
-    private image: ProductImage,
-    private config: ConfigManager
-  ) {}
+// export class ProductImageValidator implements Validator {
+//   constructor(
+//     private image: ProductImage,
+//     private config: ConfigManager
+//   ) {}
 
-  validate(): ValidationResult {
-    const errors: ValidationError[] = [];
-    const imageConfig = this.config.get('product.images', {});
+//   validate(): ValidationResult {
+//     const errors: ValidationError[] = [];
+//     const imageConfig = this.config.get('product.images', {});
 
-    if (!this.image.url) {
-      errors.push({
-        field: 'image.url',
-        message: 'Image URL is required'
-      });
-    } else if (!this.isValidImageUrl(this.image.url)) {
-      errors.push({
-        field: 'image.url',
-        message: 'Invalid image URL format'
-      });
-    }
+//     if (!this.image.url) {
+//       errors.push({
+//         field: 'image.url',
+//         message: 'Image URL is required'
+//       });
+//     } else if (!this.isValidImageUrl(this.image.url)) {
+//       errors.push({
+//         field: 'image.url',
+//         message: 'Invalid image URL format'
+//       });
+//     }
 
-    if (this.image.size > (imageConfig.maxSize || 5 * 1024 * 1024)) {
-      errors.push({
-        field: 'image.size',
-        message: `Image size cannot exceed ${imageConfig.maxSize || 5}MB`
-      });
-    }
+//     if (this.image.size > (imageConfig.maxSize || 5 * 1024 * 1024)) {
+//       errors.push({
+//         field: 'image.size',
+//         message: `Image size cannot exceed ${imageConfig.maxSize || 5}MB`
+//       });
+//     }
 
-    if (!imageConfig.allowedTypes?.includes(this.image.type)) {
-      errors.push({
-        field: 'image.type',
-        message: `Invalid image type. Allowed types: ${imageConfig.allowedTypes?.join(', ')}`
-      });
-    }
+//     if (!imageConfig.allowedTypes?.includes(this.image.type)) {
+//       errors.push({
+//         field: 'image.type',
+//         message: `Invalid image type. Allowed types: ${imageConfig.allowedTypes?.join(', ')}`
+//       });
+//     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
 
-  private isValidImageUrl(url: string): boolean {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
+//   private isValidImageUrl(url: string): boolean {
+//     try {
+//       new URL(url);
+//       return true;
+//     } catch {
+//       return false;
+//     }
+//   }
+// }
 
-export class ProductCategoryValidator implements Validator {
-  constructor(
-    private categories: string[],
-    private categoryService: CategoryService
-  ) {}
+// export class ProductCategoryValidator implements Validator {
+//   constructor(
+//     private categories: string[],
+//     private categoryService: CategoryService
+//   ) {}
 
-  async validate(): Promise<ValidationResult> {
-    const errors: ValidationError[] = [];
+//   async validate(): Promise<ValidationResult> {
+//     const errors: ValidationError[] = [];
 
-    if (!Array.isArray(this.categories)) {
-      errors.push({
-        field: 'categories',
-        message: 'Categories must be an array'
-      });
-      return { isValid: false, errors };
-    }
+//     if (!Array.isArray(this.categories)) {
+//       errors.push({
+//         field: 'categories',
+//         message: 'Categories must be an array'
+//       });
+//       return { isValid: false, errors };
+//     }
 
-    if (this.categories.length === 0) {
-      errors.push({
-        field: 'categories',
-        message: 'At least one category is required'
-      });
-      return { isValid: false, errors };
-    }
+//     if (this.categories.length === 0) {
+//       errors.push({
+//         field: 'categories',
+//         message: 'At least one category is required'
+//       });
+//       return { isValid: false, errors };
+//     }
 
-    // Validate each category exists
-    const validationPromises = this.categories.map(async (categoryId) => {
-      const category = await this.categoryService.getCategory(categoryId);
-      if (!category.data) {
-        errors.push({
-          field: 'categories',
-          message: `Category ${categoryId} does not exist`
-        });
-      }
-    });
+//     // Validate each category exists
+//     const validationPromises = this.categories.map(async (categoryId) => {
+//       const category = await this.categoryService.getCategory(categoryId);
+//       if (!category.data) {
+//         errors.push({
+//           field: 'categories',
+//           message: `Category ${categoryId} does not exist`
+//         });
+//       }
+//     });
 
-    await Promise.all(validationPromises);
+//     await Promise.all(validationPromises);
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-}
+//     return {
+//       isValid: errors.length === 0,
+//       errors
+//     };
+//   }
+// }
