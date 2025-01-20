@@ -28,8 +28,8 @@ export interface Cart {
 
 export type CartStatus = 'active' | 'abandoned' | 'converted';
 
-export interface CartOperationOptions {
-  skipCache?: boolean;
-  invalidateCache?: boolean;
-  validateStock?: boolean;
-}
+// export interface CartOperationOptions {
+//   skipCache?: boolean;
+//   invalidateCache?: boolean;
+//   validateStock?: boolean;
+// }

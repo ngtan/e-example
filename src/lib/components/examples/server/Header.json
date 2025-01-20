@@ -1,0 +1,27 @@
+{
+  "default": {
+    "$$typeof": "Symbol(react.element)",
+    "type": "div",
+    "props": {
+      "className": "grid grid-cols-1 md:grid-cols-3 gap-4",
+      "children": [
+        {
+          "$$typeof": "Symbol(react.element)",
+          "type": "div",
+          "props": {
+            "className": "p-4 bg-white shadow rounded-lg",
+            "children": "Product 1"
+          }
+        },
+        {
+          "$$typeof": "Symbol(react.element)",
+          "type": "div",
+          "props": {
+            "className": "p-4 bg-white shadow rounded-lg",
+            "children": "Product 2"
+          }
+        }
+      ]
+    }
+  }
+}

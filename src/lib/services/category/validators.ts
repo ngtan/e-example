@@ -55,6 +55,7 @@
 // }
 
 import { Validator } from "../business";
+import { CategoryCreateInput, CategoryUpdateInput } from './types';
 
 export interface ValidationError {
   field: string;
@@ -65,19 +66,6 @@ export interface ValidationError {
 export interface ValidationResult {
   isValid: boolean;
   errors: ValidationError[];
-}
-export interface CategoryCreateInput {
-  name: string;
-  slug: string;
-  description: string;
-  image: string;
-}
-
-export interface CategoryUpdateInput {
-  name: string;
-  slug: string;
-  description: string;
-  image: string;
 }
 
 // src/lib/services/category/validators.ts
